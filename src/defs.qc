@@ -728,4 +728,14 @@ float team2_items;
 .float deploy_finished;
 .float deploy_time;
 
+.float sturdy_finished;
+.float sturdy_time;
 
+//How much cash the player has
+.float cash;
+
+float(entity e, float amt) purchase;
+float(string s) value_for_item;
+#define DROP_MULTIPLIER .5
+
+.float alpha;

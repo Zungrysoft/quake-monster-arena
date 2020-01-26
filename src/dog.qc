@@ -55,7 +55,7 @@ local float 	ldmg;
 
 	delta = self.enemy.origin - self.origin;
 
-	if (vlen(delta) > 100)
+	if (vlen(delta) > 100 && self.enemy.classname != "info_oldonehurt")
 		return;
 		
 	ldmg = (random() + random() + random()) * 8;

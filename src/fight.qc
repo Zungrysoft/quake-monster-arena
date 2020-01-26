@@ -198,7 +198,7 @@ void() ai_melee =
 		
 	delta = self.enemy.origin - self.origin;
 
-	if (vlen(delta) > 60)
+	if (vlen(delta) > 60 && self.enemy.classname != "info_oldonehurt")
 		return;
 		
 	ldmg = (random() + random() + random()) * 3;
@@ -218,7 +218,7 @@ void() ai_melee_side =
 	
 	delta = self.enemy.origin - self.origin;
 
-	if (vlen(delta) > 60)
+	if (vlen(delta) > 60 && self.enemy.classname != "info_oldonehurt")
 		return;
 	if (!CanDamage (self.enemy, self))
 		return;

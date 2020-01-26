@@ -174,22 +174,19 @@ void() powerup_touch =
 	sprint (other, self.netname);
 	sprint (other,"\n");
 
-	if (deathmatch)
+	self.mdl = self.model;
+	
+	if ((self.classname == "item_artifact_invulnerability") ||
+		(self.classname == "item_artifact_invisibility"))
 	{
-		self.mdl = self.model;
-		
-		if ((self.classname == "item_artifact_invulnerability") ||
-			(self.classname == "item_artifact_invisibility"))
-		{
-			self.nextthink = time + 60*5;
-		}
-		else
-		{
-			self.nextthink = time + 60;
-		}
-		
-		self.think = SUB_regen;
-	}	
+		self.nextthink = time + 60*5;
+	}
+	else
+	{
+		self.nextthink = time + 60;
+	}
+	
+	self.think = SUB_regen;
 
 	sound (other, CHAN_POWERUP, self.noise, 1, ATTN_NORM);
 	stuffcmd (other, "bf\n");

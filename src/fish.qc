@@ -76,7 +76,7 @@ void() fish_melee =
 		
 	delta = self.enemy.origin - self.origin;
 
-	if (vlen(delta) > 60)
+	if (vlen(delta) > 60 && self.enemy.classname != "info_oldonehurt")
 		return;
 		
 	sound (self, CHAN_VOICE, "fish/bite.wav", 1, ATTN_NORM);

@@ -60,8 +60,11 @@ void(entity targ, entity attacker) Killed =
 	oself = self;
 	self = targ;
 	
+	float otherteam;
+	entity t;
+	
 	if (self.health < -99)
-		self.health = -99;		// don't let sbar look bad if a player
+		self.health = -99;		// don't let sbar look bad if a player dies with super low health
 
 	if (self.movetype == MOVETYPE_PUSH || self.movetype == MOVETYPE_NONE)
 	{	// doors, triggers, etc
@@ -77,6 +80,26 @@ void(entity targ, entity attacker) Killed =
 	{
 		killed_monsters = killed_monsters + 1;
 		WriteByte (MSG_ALL, SVC_KILLEDMONSTER);
+		
+		//Monsters drop cash for the other team
+		if (self.arena_team) {
+			if (self.arena_team == 1) {
+				otherteam = 2;
+			} else {
+				otherteam = 1;
+			}
+			
+			while (1) {
+				t = nextent(t);
+				if (t.classname == "player") {
+					if (t.arena_team == otherteam) {
+						purchase(t, -1 * ceil(value_for_item(self.classname) * DROP_MULTIPLIER));
+					}
+				} else {
+					break;
+				}
+			}
+		}
 	}
 
 	ClientObituary(self, attacker);
@@ -123,14 +146,10 @@ void(entity targ, entity inflictor, entity attacker, float damage) T_Damage =
 	damage_attacker = attacker;
 
 // check for quad damage powerup on the attacker
-	if (attacker.super_damage_finished > time)
+	if (attacker.super_damage_finished > time && inflictor.classname != "info_oldonehurt")
 		damage = damage * 4;
 		
 	take = damage;
-	
-	//Reduced self damage in copper nightmare, so rocket jumping is still viable
-	if (coppernightmare() && attacker == targ)
-		take = take * 0.5;
 
 // save damage based on the target's armor level
 	save = ceil(targ.armortype*take);
@@ -163,7 +182,7 @@ void(entity targ, entity inflictor, entity attacker, float damage) T_Damage =
 	}
 
 // check for godmode or invincibility
-	if (targ.flags & FL_GODMODE)
+	if (targ.flags & FL_GODMODE || targ.outside)
 		return;
 	if (targ.invincible_finished > time && !(damage >= 666000 && damage < 666005))
 	{
@@ -182,6 +201,10 @@ void(entity targ, entity inflictor, entity attacker, float damage) T_Damage =
 	&& (inflictor.classname != "door") )	// because squishing a teammate is still possible
 		return;
 		
+	//Monsters can't harm their own boss
+	if (targ.classname == "monster_oldone" && targ.arena_team == attacker.arena_team)
+		return;
+		
 // do the damage
 	targ.health = targ.health - take;
 			
@@ -195,13 +218,14 @@ void(entity targ, entity inflictor, entity attacker, float damage) T_Damage =
 	oldself = self;
 	self = targ;
 
-	if ( (self.flags & FL_MONSTER) && attacker != world)
+	//Don't change targets if sturdy is active
+	if ( (self.flags & FL_MONSTER) && attacker != world && !(self.sturdy_finished > time))
 	{
 	// get mad unless of the same class (except for soldiers)
 		if (self != attacker && attacker != self.enemy)
-		{
+		{	
 			if (self.arena_team) {
-				if (self.arena_team != attacker.arena_team  || (self.classname == "monster_army")) {
+				if (self.arena_team != attacker.arena_team  || (self.classname == "monster_army" && attacker.classname == "monster_army")) {
 					if (self.enemy.classname == "player")
 						self.oldenemy = self.enemy;
 					
@@ -222,7 +246,7 @@ void(entity targ, entity inflictor, entity attacker, float damage) T_Damage =
 		}
 	}
 
-	if (self.th_pain)
+	if (self.th_pain && !(self.sturdy_finished > time))
 	{
 		self.th_pain (attacker, take);
 	// nightmare mode monsters don't go into pain frames often

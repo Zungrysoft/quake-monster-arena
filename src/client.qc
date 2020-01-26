@@ -365,7 +365,7 @@ void() set_suicide_frame;
 // called by ClientKill and DeadThink
 void() respawn =
 {
-	if (coop)
+	/*if (coop)
 	{
 		// make a copy of the dead body for appearances sake
 		CopyToBodyQue (self);
@@ -375,18 +375,18 @@ void() respawn =
 		PutClientInServer ();
 	}
 	else if (deathmatch)
-	{
+	{*/
 		// make a copy of the dead body for appearances sake
 		CopyToBodyQue (self);
 		// set default spawn parms
 		SetNewParms ();
 		// respawn		
 		PutClientInServer ();
-	}
+	/*}
 	else
 	{	// restart the entire server
 		localcmd ("restart\n");
-	}
+	}*/
 };
 
 
@@ -507,6 +507,7 @@ void() PutClientInServer =
 	self.invincible_time = 0;
 	self.health = 100;
 	self.max_health = 100;
+	self.cash = 20;
 	
 	self.inventory_size = 0;
 	self.outside = 1;
@@ -1155,9 +1156,12 @@ void() ReturnPlayer = {
 	self.ammo_cells = 0;
 	self.ammo_rockets = self.inventory_size;
 	
+	self.health = 100;
+	
 	W_SetCurrentAmmo();
 	
 	spawn_tfog (t.origin);
+	spawn_tdeath(t.origin, self);
 	
 	setorigin (self, t.origin);
 	self.angles = t.angles;
@@ -1165,7 +1169,6 @@ void() ReturnPlayer = {
 	if (self.flags & FL_ONGROUND)
 		self.flags = (self.flags | FL_ONGROUND) - FL_ONGROUND;
 }
-
 
 /*
 ================
@@ -1207,9 +1210,16 @@ void() PlayerPostThink =
 	
 	CheckPowerups ();
 	
-	
 	if (time > self.deploy_finished && !self.outside) {
 		ReturnPlayer();
+	}
+	
+	if (time > self.count) {
+		self.count = time + .66;
+		if (self.health > self.max_health) {
+			self.health --;
+		}
+		purchase(self, -1);
 	}
 };
 

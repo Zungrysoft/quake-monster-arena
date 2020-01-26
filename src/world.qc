@@ -160,7 +160,8 @@ void() worldspawn =
 	
 	precache_sound("items/health1.wav");
 	precache_sound("items/armor1.wav");
-
+	precache_sound("misc/medkey.wav");
+	precache_sound("doors/meduse.wav");
 //
 // Setup light animation tables. 'a' is total darkness, 'z' is maxbright.
 //

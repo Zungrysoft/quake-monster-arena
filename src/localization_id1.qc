@@ -40,8 +40,15 @@
 
 //Monster Arena Stuff
 #define LOC_NO_DEPLOY	"No items to deploy"
-#define LOC_NO_MONEY	"Not enough Quakebux"
+#define LOC_NO_MONEY	"Not enough Quakebux!"
 #define LOC_NO_SPACE	"Your inventory is full!"
+
+#define LOC_BOSS_HP_A	"Team "
+#define LOC_BOSS_HP_B	"'s boss is at "
+#define LOC_BOSS_HP_C	" health!"
+
+#define LOC_BOSS_DEATH_A	"Team "
+#define LOC_BOSS_DEATH_B	"'s boss has been slain!"
 
 //Item names
 #define LOC_QUAD_FADE	"Quad Damage is wearing off"

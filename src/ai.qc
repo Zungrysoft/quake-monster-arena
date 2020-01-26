@@ -64,9 +64,29 @@ void() status_update =
 		self.invincible_time = 0;
 		sound(self, CHAN_ITEM, "items/protect2.wav", 1, ATTN_NORM);
 	}
+	if (self.invisible_time && self.invisible_finished - 3 < time) {
+		self.invisible_time = 0;
+		sound(self, CHAN_ITEM, "items/inv2.wav", 1, ATTN_NORM);
+	}
 	
-	if (self.super_damage_finished < time && self.invincible_finished < time) {
+	if (self.sturdy_time == 1 && self.sturdy_finished - 3 < time) {
+		self.sturdy_time = 2;
+		sound(self, CHAN_ITEM, "doors/meduse.wav", 1, ATTN_NORM);
+	}
+	if (self.sturdy_time == 2 && self.sturdy_finished - 2 < time) {
+		self.sturdy_time = 3;
+		sound(self, CHAN_ITEM, "doors/meduse.wav", 1, ATTN_NORM);
+	}
+	if (self.sturdy_time == 3 && self.sturdy_finished - 1 < time) {
+		self.sturdy_time = 0;
+		sound(self, CHAN_ITEM, "doors/meduse.wav", 1, ATTN_NORM);
+	}
+	
+	if (self.super_damage_finished < time && self.invincible_finished < time && self.sturdy_finished < time) {
 		self.effects = (self.effects | EF_DIMLIGHT) - EF_DIMLIGHT;
+	}
+	if (self.invisible_finished < time) {
+		self.alpha = 1;
 	}
 }
 
@@ -435,12 +455,12 @@ float() FindTarget =
 
 	if (r == RANGE_NEAR)
 	{
-		if (client.show_hostile < time && !infront (client))
+		if (client.show_hostile < time && !infront (client) && client.classname == "player")
 			return FALSE;
 	}
 	else if (r == RANGE_MID)
 	{
-		if ( /* client.show_hostile < time || */ !infront (client))
+		if (!infront (client) && client.classname == "player")
 			return FALSE;
 	}
 	

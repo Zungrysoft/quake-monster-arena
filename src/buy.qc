@@ -8,6 +8,33 @@ void() no_space = {
 	sound (activator, CHAN_VOICE, "misc/talk.wav", 1, ATTN_NORM);
 }
 
+void(entity e, string item) add_to_inventory = {
+	entity oself;
+	
+	e.inventory[e.inventory_size] = item;
+	e.inventory_size ++;
+	if (e.outside) {
+		e.ammo_rockets = e.inventory_size;
+	}
+	
+	oself = self;
+	self = e;
+	W_SetCurrentAmmo();
+	self = oself;
+}
+
+float(entity e, float amt) purchase = {
+	if (e.cash < amt) {
+		no_money();
+		return 0;
+	}
+	e.cash -= amt;
+	if (e.outside) {
+		e.armorvalue = e.cash;
+	}
+	return 1;
+}
+
 void() precache_buy;
 
 void() buy_use = {
@@ -16,12 +43,9 @@ void() buy_use = {
 		return;
 	}
 	
-	activator.inventory[activator.inventory_size] = self.message;
-	activator.inventory_size ++;
-	activator.ammo_rockets = activator.inventory_size;
-	
-	self = activator;
-	W_SetCurrentAmmo();
+	if (purchase(activator, self.count)) {
+		add_to_inventory(activator, self.message);
+	}
 }
 
 void() effect_buy = {
@@ -31,7 +55,7 @@ void() effect_buy = {
 		self.message = "monster_ogre";
 	}
 	if (!self.count)
-		self.count = 50;
+		self.count = value_for_item(self.message);
 }
 
 /*
@@ -41,7 +65,7 @@ armor	(green)
 quad	(blue)
 pent	(yellow)
 ring	(white)
-speed	(lt blue)
+sturdy	(lt blue)
 ticket	(rainbow)
 */
 
@@ -86,11 +110,37 @@ float(string s) checktype =
 	if (s == "quad")	{return 1;}
 	if (s == "pent")	{return 1;}
 	if (s == "ring")	{return 1;}
-	if (s == "speed")	{return 1;}
+	if (s == "sturdy")	{return 1;}
 	
 	return 0;
 };
 
+float(string s) value_for_item =
+{
+	if (s == "monster_army")		{return 3;}
+	if (s == "monster_dog")			{return 4;}
+	if (s == "monster_enforcer")	{return 7;}
+	if (s == "monster_ogre")		{return 18;}
+	if (s == "monster_wizard")		{return 9;}
+	if (s == "monster_demon1")		{return 15;}
+	if (s == "monster_shambler")	{return 45;}
+	if (s == "monster_fish")		{return 3;}
+	if (s == "monster_hell_knight")	{return 20;}
+	if (s == "monster_shalrath")	{return 20;}
+	if (s == "monster_tarbaby")		{return 20;}
+	if (s == "monster_zombie")		{return 30;}
+	if (s == "monster_knight")		{return 8;}
+	
+	if (s == "health")	{return 5;}
+	if (s == "armor")	{return 15;}
+	if (s == "quad")	{return 25;}
+	if (s == "pent")	{return 50;}
+	if (s == "ring")	{return 15;}
+	if (s == "sturdy")	{return 10;}
+	if (s == "ticket")	{return 30;}
+	
+	return 0;
+}
 
 
 

@@ -538,6 +538,7 @@ void() PlayerDie =
 	(IT_INVISIBILITY | IT_INVULNERABILITY | IT_SUIT | IT_QUAD) );
 	self.invisible_finished = 0;	// don't die as eyes
 	self.invincible_finished = 0;
+	self.deploy_finished = 0;
 	self.super_damage_finished = 0;
 	self.radsuit_finished = 0;
 	self.effects = 0;	// 1998-07-23 Glowing corpse of players which had quad/pentagram until respawn fix by Maddes

@@ -75,14 +75,14 @@ void() old_pain4        =[      $shake4,  old_pain5       ] {lightstyle(0, "c");
 void() old_pain5        =[      $shake5,  old_pain6       ] {lightstyle(0, "a");};
 void() old_pain6        =[      $shake6,  old_pain7       ] {lightstyle(0, "g");};
 void() old_pain7        =[      $shake7,  old_pain8       ] {lightstyle(0, "k");};
-void() old_pain8        =[      $shake2,  old_idle1       ] {lightstyle(0, "m");};
-/*void() old_pain9        =[      $shake9,  old_pain10      ] {lightstyle(0, "k");};
+void() old_pain8        =[      $shake8,  old_pain9       ] {lightstyle(0, "m");};
+void() old_pain9        =[      $shake9,  old_pain10      ] {lightstyle(0, "k");};
 void() old_pain10       =[      $shake10, old_pain11      ] {lightstyle(0, "g");};
 void() old_pain11       =[      $shake11, old_pain12      ] {lightstyle(0, "c");};
 void() old_pain12       =[      $shake12, old_pain13      ] {lightstyle(0, "a");};
 void() old_pain13       =[      $shake13, old_pain14      ] {lightstyle(0, "g");};
 void() old_pain14       =[      $shake14, old_pain15      ] {lightstyle(0, "k");};
-void() old_pain15       =[      $shake15, old_idle1		  ] {lightstyle(0, "m");};*/
+void() old_pain15       =[      $shake2, old_idle1		  ] {lightstyle(0, "m");};
 
 void() old_thrash1        =[	  $shake1,  old_thrash2       ] {lightstyle(0, "m");};
 void() old_thrash2        =[      $shake2,  old_thrash3       ] {lightstyle(0, "k");};
@@ -118,8 +118,17 @@ void() finale_3 =
 {
 	// start shub thrashing wildly
 	shub.think = old_thrash1;
-	sound (shub, CHAN_VOICE, "boss2/death.wav", 1, ATTN_NORM);
+	sound (shub, CHAN_VOICE, "boss2/death.wav", 1, ATTN_NONE);
 	lightstyle(0, "abcdefghijklmlkjihgfedcb");	
+	
+	bprint(LOC_BOSS_DEATH_A);
+	bprint(ftos(self.arena_team));
+	bprint(LOC_BOSS_DEATH_B);
+	bprint("\n");
+	
+	bprint("Your time: ");
+	bprint(ftos(time));
+	bprint(" seconds.\n");
 };
 
 void() finale_4 =
@@ -130,7 +139,7 @@ void() finale_4 =
 	local	float	x, y, z;
 	local	float	r;
 
-	sound (self, CHAN_VOICE, "boss2/pop2.wav", 1, ATTN_NORM);
+	sound (self, CHAN_VOICE, "boss2/pop2.wav", 1, ATTN_NONE);
 	
 	oldo = self.origin;
 
@@ -177,13 +186,23 @@ void (entity attacker, float damage) nopain =
 		hptest = hptest - (self.max_health * .25);
 		if (self.health < hptest && self.health + damage > hptest) {
 			self.think = old_pain1;
+			bprint(LOC_BOSS_HP_A);
+			bprint(ftos(self.arena_team));
+			bprint(LOC_BOSS_HP_B);
+			bprint(ftos(self.health));
+			bprint(LOC_BOSS_HP_C);
+			bprint("\n");
 			i = 3;
 		}
 	}
+	//if (random() < .3) {
+		sound (shub, CHAN_VOICE, "hknight/grunt.wav", 1, ATTN_NONE);
+	//}
+	
 };
 
 //============================================================================
-
+void() create_oldonehurt;
 
 /*QUAKED monster_oldone (1 0 0) (-16 -16 -24) (16 16 32)
 */
@@ -194,12 +213,13 @@ void() monster_oldone =
 	precache_sound2 ("boss2/death.wav");
 	precache_sound2 ("boss2/sight.wav");
 	precache_sound2 ("boss2/pop2.wav");
+	precache_sound2 ("hknight/grunt.wav");
 
 	self.solid = SOLID_SLIDEBOX;
 	self.movetype = MOVETYPE_STEP;
 	
 	setmodel (self, "progs/oldone.mdl");
-	setsize (self, '-160 -128 -24', '160 128 256');
+	setsize (self, '-128 -128 -24', '128 128 256');
 
 	if (!self.health)
 		self.health = 40000;
@@ -213,6 +233,8 @@ void() monster_oldone =
 	self.th_die = finale_3;
 	shub = self;
 	
+	create_oldonehurt();
+	
 	total_monsters = total_monsters + 1;
 };
 
@@ -225,21 +247,27 @@ void (entity attacker, float damage) oldonehurt_pain =
 	}
 };
 
-void() info_oldonehurt = {
-	if (!self.target) {
-		objerror("info_oldonehurt without target");
-	}
-	entity t = find(world, targetname, self.target);
-	if (t) {
-		self.enemy = t;
-	} else {
-		objerror("info_oldonehurt: no target found");
-	}
-	self.solid = SOLID_BBOX;
-	setsize (self, '-12 -12 -40', '12 12 40');
-	self.takedamage = DAMAGE_YES;
-	self.health = 9999999999999;
-	self.th_die = SUB_Null;
-	self.th_pain = oldonehurt_pain;
+void() create_oldonehurt = {
+	entity obj = spawn();
 	
+	obj.enemy = self;
+	obj.classname = "info_oldonehurt";
+	
+	obj.arena_team = self.arena_team;
+	obj.solid = SOLID_BBOX;
+	setsize (obj, '-12 -12 -40', '12 12 40');
+	obj.takedamage = DAMAGE_YES;
+	obj.health = 9999999999999;
+	obj.th_die = SUB_Null;
+	obj.th_pain = oldonehurt_pain;
+	
+	makevectors(self.angles);
+	
+	setorigin(obj, self.origin + (v_forward * 130) + '0 0 45');
 }
+
+
+
+
+
+

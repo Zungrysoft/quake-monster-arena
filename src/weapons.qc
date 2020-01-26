@@ -41,7 +41,12 @@ void() W_FireAxe =
 
 	makevectors (self.v_angle);
 	source = self.origin + '0 0 22';
-	traceline (source, source + v_forward*64, FALSE, self);
+	if (self.outside) {
+		traceline (source, source + v_forward*200, FALSE, self);
+	} else {
+		traceline (source, source + v_forward*64, FALSE, self);
+	}
+	
 	if (trace_fraction == 1.0)
 		return;
 	
@@ -51,7 +56,12 @@ void() W_FireAxe =
 	{
 		trace_ent.axhitme = 1;
 		SpawnBlood (org, '0 0 0', 20);
-		T_Damage (trace_ent, self, self, 20);
+		if (self.outside) {
+			T_Damage (trace_ent, self, self, 5);
+		} else {
+			T_Damage (trace_ent, self, self, 20);
+		}
+		
 		
 	}
 	else
@@ -268,6 +278,8 @@ void() W_FireShotgun =
 	local vector dir;
 
 	sound (self, CHAN_WEAPON, "weapons/guncock.wav", 1, ATTN_NORM);	
+	
+	self.currentammo = self.ammo_shells -= 1;
 
 	self.punchangle_x = -2;
 	
@@ -290,6 +302,8 @@ void() W_FireSuperShotgun =
 		W_FireShotgun ();
 		return;
 	}
+	
+	self.currentammo = self.ammo_shells -= 2;
 	
 	self.punchangle_x = -4;
 	
@@ -343,7 +357,7 @@ void() T_DeployParticle =
 	if (self.message == "quad")		{color = 208;}
 	if (self.message == "pent")		{color = 79;}
 	if (self.message == "ring")		{color = 0;}
-	if (self.message == "speed")	{color = 47;}
+	if (self.message == "sturdy")	{color = 47;}
 	if (self.message == "ticket")	{color = 73;}
 	
 	particle (self.origin, '0 0 0', color, 50);
@@ -389,6 +403,21 @@ void() T_DeployPowerupTouch =
 			other.effects = other.effects | EF_DIMLIGHT;
 			sound(other, CHAN_ITEM, "items/protect.wav", 1, ATTN_NORM);
 		}
+		if (self.message == "ring") {
+			if (other.classname == "player") {
+				other.items = other.items & IT_INVISIBILITY;
+			}
+			other.invisible_time = 1;
+			other.invisible_finished = time + 30;
+			other.alpha = .15;
+			sound(other, CHAN_ITEM, "items/inv1.wav", 1, ATTN_NORM);
+		}
+		if (self.message == "sturdy") {
+			other.sturdy_time = 1;
+			other.sturdy_finished = time + 30;
+			other.effects = other.effects | EF_DIMLIGHT;
+			sound(other, CHAN_ITEM, "misc/medkey.wav", 1, ATTN_NORM);
+		}
 	}
 	
 	remove(self);
@@ -422,14 +451,22 @@ void() T_DeployResizeCheck =
 }
 
 void(vector) spawn_tfog;
+void(vector,entity) spawn_tdeath;
 
 void() T_DeployPlayer = {
 	entity plyr = self.owner;
 	entity oself;
 	
-	spawn_tfog (self.origin);
+	spawn_tfog(self.origin);
+	//spawn_tdeath(self.origin, plyr);
 	
-	setorigin (plyr, self.origin);
+	//Safe mode for if the rocket never resized or was resized too recently
+	if (self.count == 0 || (time - self.count) < .3) {
+		setorigin(plyr, self.origin + '0 0 15' + (self.velocity * -.18));
+	} else {
+		setorigin(plyr, self.origin + '0 0 15' + (self.velocity * -.04));
+	}
+		
 	if (plyr.flags & FL_ONGROUND)
 		plyr.flags = (other.flags | FL_ONGROUND) - FL_ONGROUND;
 	
@@ -448,6 +485,10 @@ void() T_DeployPlayer = {
 	plyr.ammo_nails = 0;
 	plyr.ammo_rockets = 0;
 	plyr.ammo_cells = 0;
+	
+	plyr.armorvalue = 0;
+	
+	plyr.health = 100;
 	
 	if (plyr.items & IT_SUPER_SHOTGUN)
 		plyr.ammo_shells += 5;
@@ -486,12 +527,13 @@ void() T_DeployTouch =
 		
 		self.classname = oself.message;
 		self.arena_team = oself.owner.arena_team;
+		self.angles = oself.owner.angles;
 		
 		//Safe mode for if the rocket never resized or was resized too recently
-		if (oself.count == 0 || (time - oself.count) < .3) {
-			setorigin(self, oself.origin + (oself.velocity * -.09));
+		if (oself.count == 0 || (time - oself.count) < .05) {
+			setorigin(self, oself.origin + '0 0 15' + (oself.velocity * -.09));
 		} else {
-			setorigin(self, oself.origin + (oself.velocity * -.02));
+			setorigin(self, oself.origin + '0 0 5');
 		}
 		
 		reinitialize();
@@ -605,6 +647,8 @@ void() W_FireRocket =
 	missile.movetype = MOVETYPE_FLYMISSILE;
 	missile.solid = SOLID_BBOX;
 	missile.classname = "missile";
+	
+	self.currentammo = self.ammo_rockets -= 1;
 		
 // set missile speed	
 
@@ -702,6 +746,8 @@ void() W_FireLightning =
 		T_RadiusDamage (self, self, 35*cells, world);
 		return;
 	}
+	
+	self.currentammo = self.ammo_cells -= 1;
 
 	if (self.t_width < time)
 	{
@@ -780,6 +826,8 @@ void() W_FireGrenade =
 	missile.movetype = MOVETYPE_BOUNCE;
 	missile.solid = SOLID_BBOX;
 	missile.classname = "grenade";
+	
+	self.currentammo = self.ammo_rockets -= 1;
 		
 // set missile speed	
 
@@ -850,6 +898,7 @@ void() W_FireSuperSpikes =
 	sound (self, CHAN_WEAPON, "weapons/spike2.wav", 1, ATTN_NORM);
 	self.attack_finished = time + 0.2;
 	dir = aim (self, 1000);
+	self.currentammo = self.ammo_nails -= 2;
 	launch_spike (self.origin + '0 0 16', dir);
 	newmis.touch = superspike_touch;
 	setmodel (newmis, "progs/s_spike.mdl");
@@ -880,6 +929,7 @@ void(float ox) W_FireSpikes =
 		sound (self, CHAN_WEAPON, "weapons/rocket1i.wav", 1, ATTN_NORM);
 		self.attack_finished = time + 0.2;
 		dir = aim (self, 1000);
+		self.currentammo = self.ammo_nails -= 1;
 		//dir = dir + crandom()*spread_x*v_right + crandom()*spread_y*v_up;
 		launch_spike (self.origin + '0 0 16' + v_right*ox, dir);
 
@@ -1063,7 +1113,7 @@ float() W_BestWeapon =
 };
 
 float() W_CheckNoAmmo =
-{
+{	
 	if (self.currentammo > 0)
 		return TRUE;
 
@@ -1120,7 +1170,12 @@ void() W_Attack =
 		else
 			player_axed1 ();
 		
-		self.attack_finished = time + 0.5;
+		if (self.outside) {
+			self.attack_finished = time + 0.4;
+		} else {
+			self.attack_finished = time + 0.5;
+		}
+		
 	}
 	else if (self.weapon == IT_SHOTGUN)
 	{
@@ -1272,26 +1327,8 @@ void() CheatCommand =
 {
 	if (deathmatch)
 		return;
-
-	self.ammo_rockets = 100;
-	self.ammo_nails = 200;
-	self.ammo_shells = 100;
-	self.items = self.items | 
-		IT_AXE |
-		IT_SHOTGUN |
-		IT_SUPER_SHOTGUN |
-		IT_NAILGUN |
-		IT_SUPER_NAILGUN |
-		IT_GRENADE_LAUNCHER |
-		IT_ROCKET_LAUNCHER |
-		IT_KEY1 | IT_KEY2;
-
-	self.ammo_cells = 100;
-	self.items = self.items | IT_LIGHTNING;
-
-	self.weapon = IT_ROCKET_LAUNCHER;
-	self.impulse = 0;
-	W_SetCurrentAmmo ();
+	
+	purchase(self, -500);
 };
 
 /*
