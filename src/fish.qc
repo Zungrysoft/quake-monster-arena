@@ -145,21 +145,22 @@ void(entity attacker, float damage)	fish_pain =
 };
 
 
+void() precache_fish = 
+{
+	if (time < 2) {
+		precache_model2 ("progs/fish.mdl");
+		
+		precache_sound2 ("fish/death.wav");
+		precache_sound2 ("fish/bite.wav");
+		precache_sound2 ("fish/idle.wav");
+	}
+}
 
 /*QUAKED monster_fish (1 0 0) (-16 -16 -24) (16 16 24) Ambush
 */
 void() monster_fish =
 {
-	if (deathmatch)
-	{
-		remove(self);
-		return;
-	}
-	precache_model2 ("progs/fish.mdl");
-
-	precache_sound2 ("fish/death.wav");
-	precache_sound2 ("fish/bite.wav");
-	precache_sound2 ("fish/idle.wav");
+	precache_fish();
 
 	self.solid = SOLID_SLIDEBOX;
 	self.movetype = MOVETYPE_STEP;
@@ -168,6 +169,7 @@ void() monster_fish =
 
 	setsize (self, '-16 -16 -24', '16 16 24');
 	self.health = 25;
+	self.max_health = self.health;
 	
 	self.th_stand = f_stand1;
 	self.th_walk = f_walk1;

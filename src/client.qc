@@ -73,7 +73,7 @@ void() SetNewParms =
 	parm3 = 0;
 	parm4 = 0;
 	parm5 = 0;
-	parm6 = 25;
+	parm6 = 0;
 	parm7 = 0;
 	parm8 = IT_ROCKET_LAUNCHER;
 	parm9 = 0;
@@ -508,8 +508,7 @@ void() PutClientInServer =
 	self.health = 100;
 	self.max_health = 100;
 	
-	self.inventory_size = 1;
-	self.inventory[0] = "monster_ogre";
+	self.inventory_size = 0;
 	self.outside = 1;
 	
 	//If not in deathmatch, you're always on team 1
@@ -1097,38 +1096,75 @@ void() CheckPowerups =
 	}	
 
 // suit	
-	if (self.radsuit_finished)
+	if (self.deploy_finished)
 	{
-		self.air_finished = time + 12;		// don't drown
-
 // sound and screen flash when items starts to run out
-		if (self.radsuit_finished < time + 3)
+		if (self.deploy_finished < time + 3)
 		{
-			if (self.rad_time == 1)
+			if (self.deploy_time == 1)
 			{
-				sprint (self, LOC_BIO_FADE);
+				sprint (self, LOC_DEPLOY_FADE);
 				sprint (self, "\n");
 				stuffcmd (self, "bf\n");
 				sound (self, CHAN_AUTO, "items/suit2.wav", 1, ATTN_NORM);
-				self.rad_time = time + 1;
+				self.deploy_time = time + 1;
 			}
 			
-			if (self.rad_time < time)
+			if (self.deploy_time < time)
 			{
-				self.rad_time = time + 1;
+				self.deploy_time = time + 1;
 				stuffcmd (self, "bf\n");
 			}
 		}
 
-		if (self.radsuit_finished < time)
+		if (self.deploy_finished < time)
 		{	// just stopped
 			self.items = self.items - IT_SUIT;
-			self.rad_time = 0;
-			self.radsuit_finished = 0;
+			self.deploy_time = 0;
+			self.deploy_finished = 0;
 		}
 	}	
 
 };
+
+void() ReturnPlayer = {
+	entity t;
+	string s;
+	
+	if (self.arena_team == 1) {
+		s = "info_player_team1";
+	}
+	else if (self.arena_team == 2) {
+		s = "info_player_team2";
+	}
+	else {
+		s = "info_player_start";
+	}
+	
+	t = find(t, classname, s);
+	
+	if (!t) {
+		error("No start point found for ticket return!");
+	}
+	
+	self.outside = 1;
+	
+	self.items = IT_AXE | IT_ROCKET_LAUNCHER;
+	self.ammo_shells = 0;
+	self.ammo_nails = 0;
+	self.ammo_cells = 0;
+	self.ammo_rockets = self.inventory_size;
+	
+	W_SetCurrentAmmo();
+	
+	spawn_tfog (t.origin);
+	
+	setorigin (self, t.origin);
+	self.angles = t.angles;
+	self.fixangle = 1;
+	if (self.flags & FL_ONGROUND)
+		self.flags = (self.flags | FL_ONGROUND) - FL_ONGROUND;
+}
 
 
 /*
@@ -1139,7 +1175,7 @@ Called every frame after physics are run
 ================
 */
 void() PlayerPostThink =
-{
+{	
 	if (self.view_ofs == '0 0 0')
 		return;		// intermission or finale
 	if (self.deadflag)
@@ -1170,6 +1206,11 @@ void() PlayerPostThink =
 		self.jump_flag = self.velocity_z;
 	
 	CheckPowerups ();
+	
+	
+	if (time > self.deploy_finished && !self.outside) {
+		ReturnPlayer();
+	}
 };
 
 

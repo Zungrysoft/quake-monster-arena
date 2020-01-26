@@ -35,6 +35,7 @@
 #define LOC_PICKUP_HEALTH	"You receive "
 #define LOC_BACKPACK		" from a backpack"
 #define LOC_BONUS			" attains bonus powers!!!"
+#define LOC_HEALTH			" health"
 #define LOC_ARMOR			" armor"
 
 //Monster Arena Stuff
@@ -48,6 +49,7 @@
 #define LOC_PENT_FADE	"Protection is almost burned out"
 #define LOC_RING_FADE	"Ring of Shadows magic is fading"
 #define LOC_BIO_FADE	"Air supply in Biosuit expiring"
+#define LOC_DEPLOY_FADE	"Your time in the arena is almost up!"
 
 #define LOC_NETNAME_QUAD	"the Quad Damage"
 #define LOC_NETNAME_OCT		"the Octapower"

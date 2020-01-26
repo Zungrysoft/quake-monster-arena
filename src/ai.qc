@@ -52,6 +52,24 @@ float(float v) anglemod =
 	return v;
 };
 
+//Called intermittently by monsters to update information about them
+//TODO: Add health/team bars above their heads
+void() status_update =
+{
+	if (self.super_time && self.super_damage_finished - 3 < time) {
+		self.super_time = 0;
+		sound(self, CHAN_ITEM, "items/damage2.wav", 1, ATTN_NORM);
+	}
+	if (self.invincible_time && self.invincible_finished - 3 < time) {
+		self.invincible_time = 0;
+		sound(self, CHAN_ITEM, "items/protect2.wav", 1, ATTN_NORM);
+	}
+	
+	if (self.super_damage_finished < time && self.invincible_finished < time) {
+		self.effects = (self.effects | EF_DIMLIGHT) - EF_DIMLIGHT;
+	}
+}
+
 /*
 ==============================================================================
 
@@ -333,7 +351,7 @@ entity(entity e) findmonster =
 {
 	for (float i = 0; i < 100; i ++) {
 		e = nextent(e);
-		if (e.classname == "player" || e.flags & FL_MONSTER) {
+		if (e.classname == "player" || e.flags & FL_MONSTER || e.classname == "info_oldonehurt") {
 			break;
 		}
 	}
@@ -377,20 +395,28 @@ float() FindTarget =
 	if (client == self)
 		return FALSE;
 	
-	//Don't attack things that aren't monsters or players
-	if (!(client.flags & FL_MONSTER || client.classname == "player"))
-		return FALSE;
+	//Don't attack other monsters of the same team
+	if (self.arena_team) {
+		if (self.arena_team == client.arena_team) {
+			return FALSE;
+		}
+	} else {
+		//If this monster doesn't have a team, don't attack other monsters of the same type
+		if (client.classname == self.classname) {
+			return FALSE;
+		}
+	}
 	
 	//Don't attack dead things
 	if (client.health <= 0)
 		return FALSE;
 	
-	//Don't attack other monsters of the same type
-	//TODO: Change this to be monsters of the same team
-	if (client.classname == self.classname)
+	//Don't attack things that don't take damage
+	if (!client.takedamage)
 		return FALSE;
 	
-	if (client.classname == "player") {return FALSE;}
+	//Don't attack things that are not in the arena
+	if (client.outside) {return FALSE;}
 
 	if (client == self.enemy)
 		return FALSE;
@@ -422,7 +448,6 @@ float() FindTarget =
 // got one
 //
 	//This checks for other alerted enemies
-	//bprint(client.classname);
 	self.enemy = client;
 	/*if (self.enemy.classname != "player")
 	{
@@ -494,6 +519,8 @@ The monster is walking it's beat
 */
 void(float dist) ai_walk =
 {
+	status_update();
+	
 	movedist = dist;
 	// check for noticing a player
 	if (FindTarget ())
@@ -512,6 +539,8 @@ The monster is staying in one place for a while, with slight angle turns
 */
 void() ai_stand =
 {
+	status_update();
+	
 	if (FindTarget ())
 		return;
 	
@@ -698,9 +727,11 @@ The monster has an enemy it is trying to kill
 */
 void(float dist) ai_run =
 {
+	status_update();
+	
 	movedist = dist;
 // see if the enemy is dead
-	if (self.enemy.health <= 0)
+	if (self.enemy.health <= 0 || self.enemy.outside || !self.enemy.takedamage)
 	{
 		self.enemy = world;
 	// FIXME: look all around for other targets
@@ -726,8 +757,9 @@ void(float dist) ai_run =
 	if (enemy_vis)
 		self.search_time = time + 5;
 
+	
 // look for other coop players
-	if (coop && self.search_time < time)
+	if (self.search_time < time)
 	{
 		if (FindTarget ())
 			return;

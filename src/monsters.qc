@@ -73,9 +73,7 @@ void() walkmonster_start_go =
 	
 	if (!walkmove(0,0))
 	{
-		dprint ("walkmonster in wall at: ");
-		dprint (vtos(self.origin));
-		dprint ("\n");
+		T_Damage(self, self, self, 666000);
 	}
 	
 	self.takedamage = DAMAGE_AIM;
@@ -142,9 +140,7 @@ void() flymonster_start_go =
 
 	if (!walkmove(0,0))
 	{
-		dprint ("flymonster in wall at: ");
-		dprint (vtos(self.origin));
-		dprint ("\n");
+		T_Damage(self, self, self, 666000);
 	}
 
 	if (self.target)
@@ -204,9 +200,7 @@ void() swimmonster_start_go =
 		self.goalentity = self.movetarget = find(world, targetname, self.target);
 		if (!self.movetarget)
 		{
-			dprint ("Monster can't find target at ");
-			dprint (vtos(self.origin));
-			dprint ("\n");
+			T_Damage(self, self, self, 666000);
 		}
 // this used to be an objerror
 		self.ideal_yaw = vectoyaw(self.goalentity.origin - self.origin);

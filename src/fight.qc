@@ -10,6 +10,8 @@ When it decides it can't attack, it goes into hunt mode.
 
 float(float v) anglemod;
 
+void() status_update;
+
 void() knight_atk1;
 void() knight_runatk1;
 void() ogre_smash1;
@@ -138,7 +140,7 @@ Stay facing the enemy
 =============
 */
 void() ai_face =
-{
+{	
 	self.ideal_yaw = vectoyaw(self.enemy.origin - self.origin);
 	ChangeYaw ();
 };
@@ -156,6 +158,8 @@ float(entity targ) range;
 
 void(float d) ai_charge =
 {
+	status_update();
+	
 	ai_face ();	
 	movetogoal (d);		// done in C code...
 };

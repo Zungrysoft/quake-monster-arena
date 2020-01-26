@@ -186,21 +186,24 @@ void()	tbaby_die2	=[	$exp,		tbaby_run1	]
 //=============================================================================
 
 
+void() precache_tarbaby = 
+{
+	if (time < 2) {
+		precache_model2 ("progs/tarbaby.mdl");
+
+		precache_sound2 ("blob/death1.wav");
+		precache_sound2 ("blob/hit1.wav");
+		precache_sound2 ("blob/land1.wav");
+		precache_sound2 ("blob/sight1.wav");
+	}
+}
+
+
 /*QUAKED monster_tarbaby (1 0 0) (-16 -16 -24) (16 16 24) Ambush
 */
 void() monster_tarbaby =
 {
-	if (deathmatch)
-	{
-		remove(self);
-		return;
-	}
-	precache_model2 ("progs/tarbaby.mdl");
-
-	precache_sound2 ("blob/death1.wav");
-	precache_sound2 ("blob/hit1.wav");
-	precache_sound2 ("blob/land1.wav");
-	precache_sound2 ("blob/sight1.wav");
+	precache_tarbaby();
 	
 	self.solid = SOLID_SLIDEBOX;
 	self.movetype = MOVETYPE_STEP;
@@ -209,6 +212,7 @@ void() monster_tarbaby =
 
 	setsize (self, '-16 -16 -24', '16 16 40');
 	self.health = 80;
+	self.max_health = self.health;
 
 	self.th_stand = tbaby_stand1;
 	self.th_walk = tbaby_walk1;

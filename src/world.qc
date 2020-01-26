@@ -69,7 +69,7 @@ void() worldspawn =
 	
 	precache_sound ("boss1/sight1.wav");
 	
-	precache_sound ("items/protect.wav");		
+	precache_sound ("items/protect.wav");
 	precache_sound ("items/protect2.wav");		
 	precache_sound ("items/protect3.wav");
 	
@@ -157,6 +157,9 @@ void() worldspawn =
 	precache_model ("progs/zom_gib.mdl");
 
 	precache_model ("progs/v_light.mdl");
+	
+	precache_sound("items/health1.wav");
+	precache_sound("items/armor1.wav");
 
 //
 // Setup light animation tables. 'a' is total darkness, 'z' is maxbright.
@@ -219,6 +222,9 @@ void() StartFrame =
 	teamplay = cvar("teamplay");
 	skill = cvar("skill");
 	framecount = framecount + 1;
+	
+	team1_items = IT_AXE | IT_SHOTGUN;
+	team2_items = IT_AXE | IT_SHOTGUN;
 };
 
 /*

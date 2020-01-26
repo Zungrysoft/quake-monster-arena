@@ -321,6 +321,21 @@ float()	DogCheckAttack =
 };
 
 
+void() precache_dog = 
+{
+	if (time < 2) {
+		precache_model ("progs/h_dog.mdl");
+		precache_model ("progs/dog.mdl");
+
+		precache_sound ("dog/dattack1.wav");
+		precache_sound ("dog/ddeath.wav");
+		precache_sound ("dog/dpain1.wav");
+		precache_sound ("dog/dsight.wav");
+		precache_sound ("dog/idle.wav");
+	}
+}
+
+
 //===========================================================================
 
 /*QUAKED monster_dog (1 0 0) (-32 -32 -24) (32 32 40) Ambush
@@ -328,19 +343,7 @@ float()	DogCheckAttack =
 */
 void() monster_dog =
 {
-	if (deathmatch)
-	{
-		remove(self);
-		return;
-	}
-	precache_model ("progs/h_dog.mdl");
-	precache_model ("progs/dog.mdl");
-
-	precache_sound ("dog/dattack1.wav");
-	precache_sound ("dog/ddeath.wav");
-	precache_sound ("dog/dpain1.wav");
-	precache_sound ("dog/dsight.wav");
-	precache_sound ("dog/idle.wav");
+	precache_dog();
 
 	self.solid = SOLID_SLIDEBOX;
 	self.movetype = MOVETYPE_STEP;
@@ -349,6 +352,7 @@ void() monster_dog =
 
 	setsize (self, '-32 -32 -24', '32 32 40');
 	self.health = 25;
+	self.max_health = self.health;
 
 	self.th_stand = dog_stand1;
 	self.th_walk = dog_walk1;

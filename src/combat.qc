@@ -85,6 +85,13 @@ void(entity targ, entity attacker) Killed =
 	self.touch = SUB_Null;
 
 	monster_death_use();
+	
+	self.effects = 0;
+	self.super_time = 0;
+	self.invincible_time = 0;
+	self.invincible_finished = 0;
+	self.super_damage_finished = 0;
+	
 	self.th_die ();
 	
 	self = oself;
@@ -193,13 +200,24 @@ void(entity targ, entity inflictor, entity attacker, float damage) T_Damage =
 	// get mad unless of the same class (except for soldiers)
 		if (self != attacker && attacker != self.enemy)
 		{
-			if ( (self.classname != attacker.classname) 
-			|| (self.classname == "monster_army" ) )
-			{
-				if (self.enemy.classname == "player")
-					self.oldenemy = self.enemy;
-				self.enemy = attacker;
-				FoundTarget ();
+			if (self.arena_team) {
+				if (self.arena_team != attacker.arena_team  || (self.classname == "monster_army")) {
+					if (self.enemy.classname == "player")
+						self.oldenemy = self.enemy;
+					
+					self.enemy = attacker;
+					FoundTarget ();
+				}
+			} else {
+				//If this monster doesn't have a team, don't attack other monsters of the same type
+				if ((self.classname != attacker.classname) || (self.classname == "monster_army"))
+				{
+					if (self.enemy.classname == "player")
+						self.oldenemy = self.enemy;
+					
+					self.enemy = attacker;
+					FoundTarget ();
+				}
 			}
 		}
 	}

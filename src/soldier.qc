@@ -190,7 +190,7 @@ void() army_fire =
 void()	army_die1	=[	$death1,	army_die2	] {};
 void()	army_die2	=[	$death2,	army_die3	] {};
 void()	army_die3	=[	$death3,	army_die4	]
-{self.solid = SOLID_NOT;self.ammo_shells = 5;DropBackpack();};
+{self.solid = SOLID_NOT;};
 void()	army_die4	=[	$death4,	army_die5	] {};
 void()	army_die5	=[	$death5,	army_die6	] {};
 void()	army_die6	=[	$death6,	army_die7	] {};
@@ -202,7 +202,7 @@ void()	army_die10	=[	$death10,	army_die10	] {};
 void()	army_cdie1	=[	$deathc1,	army_cdie2	] {};
 void()	army_cdie2	=[	$deathc2,	army_cdie3	] {ai_back(5);};
 void()	army_cdie3	=[	$deathc3,	army_cdie4	]
-{self.solid = SOLID_NOT;self.ammo_shells = 5;DropBackpack();ai_back(4);};
+{self.solid = SOLID_NOT;ai_back(4);};
 void()	army_cdie4	=[	$deathc4,	army_cdie5	] {ai_back(13);};
 void()	army_cdie5	=[	$deathc5,	army_cdie6	] {ai_back(3);};
 void()	army_cdie6	=[	$deathc6,	army_cdie7	] {ai_back(4);};
@@ -235,30 +235,32 @@ void() army_die =
 };
 
 
+void() precache_army = 
+{
+	if (time < 2) {
+		precache_model ("progs/soldier.mdl");
+		precache_model ("progs/h_guard.mdl");
+		precache_model ("progs/gib1.mdl");
+		precache_model ("progs/gib2.mdl");
+		precache_model ("progs/gib3.mdl");
+
+		precache_sound ("soldier/death1.wav");
+		precache_sound ("soldier/idle.wav");
+		precache_sound ("soldier/pain1.wav");
+		precache_sound ("soldier/pain2.wav");
+		precache_sound ("soldier/sattck1.wav");
+		precache_sound ("soldier/sight1.wav");
+
+		precache_sound ("player/udeath.wav");		// gib death
+	}
+}
+
+
 /*QUAKED monster_army (1 0 0) (-16 -16 -24) (16 16 40) Ambush
 */
 void() monster_army =
 {	
-	if (deathmatch)
-	{
-		remove(self);
-		return;
-	}
-	precache_model ("progs/soldier.mdl");
-	precache_model ("progs/h_guard.mdl");
-	precache_model ("progs/gib1.mdl");
-	precache_model ("progs/gib2.mdl");
-	precache_model ("progs/gib3.mdl");
-
-	precache_sound ("soldier/death1.wav");
-	precache_sound ("soldier/idle.wav");
-	precache_sound ("soldier/pain1.wav");
-	precache_sound ("soldier/pain2.wav");
-	precache_sound ("soldier/sattck1.wav");
-	precache_sound ("soldier/sight1.wav");
-
-	precache_sound ("player/udeath.wav");		// gib death
-
+	precache_army();
 
 	self.solid = SOLID_SLIDEBOX;
 	self.movetype = MOVETYPE_STEP;
@@ -267,6 +269,7 @@ void() monster_army =
 
 	setsize (self, '-16 -16 -24', '16 16 40');
 	self.health = 30;
+	self.max_health = self.health;
 
 	self.th_stand = army_stand1;
 	self.th_walk = army_walk1;

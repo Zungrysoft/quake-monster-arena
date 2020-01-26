@@ -721,8 +721,11 @@ float(entity targ, entity inflictor) CanDamage;
 .string inventory[30];
 .float inventory_size;
 
+float team1_items;
 
+float team2_items;
 
-
+.float deploy_finished;
+.float deploy_time;
 
 

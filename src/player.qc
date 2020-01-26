@@ -542,9 +542,6 @@ void() PlayerDie =
 	self.radsuit_finished = 0;
 	self.effects = 0;	// 1998-07-23 Glowing corpse of players which had quad/pentagram until respawn fix by Maddes
 	self.modelindex = modelindex_player;	// don't use eyes
-
-	if (deathmatch || coop)
-		DropBackpack();
 	
 	self.weaponmodel="";
 	self.view_ofs = '0 0 -8';

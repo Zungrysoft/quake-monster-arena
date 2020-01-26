@@ -167,27 +167,29 @@ void() Demon_MeleeAttack =
 	demon1_atta1 ();
 };
 
+void() precache_demon1 = 
+{
+	if (time < 2) {
+		precache_model ("progs/demon.mdl");
+		precache_model ("progs/h_demon.mdl");
+
+		precache_sound ("demon/ddeath.wav");
+		precache_sound ("demon/dhit2.wav");
+		precache_sound ("demon/djump.wav");
+		precache_sound ("demon/dpain1.wav");
+		precache_sound ("demon/idle1.wav");
+		precache_sound ("demon/sight2.wav");
+	}
+}
+
 
 /*QUAKED monster_demon1 (1 0 0) (-32 -32 -24) (32 32 64) Ambush
 
 */
 void() monster_demon1 =
 {
-	if (deathmatch)
-	{
-		remove(self);
-		return;
-	}
-	precache_model ("progs/demon.mdl");
-	precache_model ("progs/h_demon.mdl");
-
-	precache_sound ("demon/ddeath.wav");
-	precache_sound ("demon/dhit2.wav");
-	precache_sound ("demon/djump.wav");
-	precache_sound ("demon/dpain1.wav");
-	precache_sound ("demon/idle1.wav");
-	precache_sound ("demon/sight2.wav");
-
+	precache_demon1();
+	
 	self.solid = SOLID_SLIDEBOX;
 	self.movetype = MOVETYPE_STEP;
 
@@ -195,6 +197,7 @@ void() monster_demon1 =
 
 	setsize (self, VEC_HULL2_MIN, VEC_HULL2_MAX);
 	self.health = 300;
+	self.max_health = self.health;
 
 	self.th_stand = demon1_stand1;
 	self.th_walk = demon1_walk1;

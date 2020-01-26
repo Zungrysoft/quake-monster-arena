@@ -325,16 +325,73 @@ void() BecomeExplosion =
 };
 
 
-void() monster_ogre;
-void() reinitialize =
-{
-	if (self.classname == "monster_ogre") {
-		monster_ogre();
-	}
-}
+void() reinitialize;
+float(string s) checktype;
 
 void() trigger_arena = {
 	InitTrigger();
+};
+
+void() T_DeployParticle =
+{
+	self.nextthink = time + .05;
+	self.think = T_DeployParticle;
+	
+	float color;
+	if (self.message == "health")	{color = 230;}
+	if (self.message == "armor")	{color = 192;}
+	if (self.message == "quad")		{color = 208;}
+	if (self.message == "pent")		{color = 79;}
+	if (self.message == "ring")		{color = 0;}
+	if (self.message == "speed")	{color = 47;}
+	if (self.message == "ticket")	{color = 73;}
+	
+	particle (self.origin, '0 0 0', color, 50);
+	
+}
+
+void() T_DeployPowerupTouch =
+{	
+	if (other == self.owner)
+		return;
+	
+	if (other.classname == "player" || (other.flags & FL_MONSTER && self.classname != "monster_oldone")) {
+		if (self.message == "health") {
+			other.health = other.max_health;
+			sound(other, CHAN_ITEM, "items/health1.wav", 1, ATTN_NORM);
+		}
+		if (self.message == "armor") {
+			if (other.classname == "player") {
+				other.armortype = .6;
+				other.armorvalue = 150;
+				other.items = (other.items - (other.items | IT_ARMOR1 | IT_ARMOR2 | IT_ARMOR3)) | IT_ARMOR2;
+			} else {
+				other.armortype = 1;
+				other.armorvalue = 300;
+			}
+			sound(other, CHAN_ITEM, "items/armor1.wav", 1, ATTN_NORM);
+		}
+		if (self.message == "quad") {
+			if (other.classname == "player") {
+				other.items = other.items & IT_QUAD;
+			}
+			other.super_time = 1;
+			other.super_damage_finished = time + 30;
+			other.effects = other.effects | EF_DIMLIGHT;
+			sound(other, CHAN_ITEM, "items/damage.wav", 1, ATTN_NORM);
+		}
+		if (self.message == "pent") {
+			if (other.classname == "player") {
+				other.items = other.items & IT_INVULNERABILITY;
+			}
+			other.invincible_time = 1;
+			other.invincible_finished = time + 30;
+			other.effects = other.effects | EF_DIMLIGHT;
+			sound(other, CHAN_ITEM, "items/protect.wav", 1, ATTN_NORM);
+		}
+	}
+	
+	remove(self);
 };
 
 //Missiles have large hitboxes to prevent spawned monsters from getting stuck, but only after they enter the arena
@@ -364,6 +421,54 @@ void() T_DeployResizeCheck =
 	} while (t != world);
 }
 
+void(vector) spawn_tfog;
+
+void() T_DeployPlayer = {
+	entity plyr = self.owner;
+	entity oself;
+	
+	spawn_tfog (self.origin);
+	
+	setorigin (plyr, self.origin);
+	if (plyr.flags & FL_ONGROUND)
+		plyr.flags = (other.flags | FL_ONGROUND) - FL_ONGROUND;
+	
+	plyr.deploy_finished = time + 30;
+	plyr.deploy_time = 1;
+	plyr.outside = 0;
+	
+	if (plyr.arena_team == 1) {
+		plyr.items = team1_items;
+	}
+	else if (plyr.arena_team == 2) {
+		plyr.items = team2_items;
+	}
+	
+	plyr.ammo_shells = 25;
+	plyr.ammo_nails = 0;
+	plyr.ammo_rockets = 0;
+	plyr.ammo_cells = 0;
+	
+	if (plyr.items & IT_SUPER_SHOTGUN)
+		plyr.ammo_shells += 5;
+	if (plyr.items & IT_NAILGUN)
+		plyr.ammo_nails += 30;
+	if (plyr.items & IT_SUPER_NAILGUN)
+		plyr.ammo_nails += 30;
+	if (plyr.items & IT_ROCKET_LAUNCHER)
+		plyr.ammo_rockets += 5;
+	if (plyr.items & IT_ROCKET_LAUNCHER)
+		plyr.ammo_rockets += 5;
+	if (plyr.items & IT_LIGHTNING)
+		plyr.ammo_cells += 15;
+	
+	oself = self;
+	self = plyr;
+	plyr.weapon = W_BestWeapon();
+	W_SetCurrentAmmo();
+	self = oself;
+}
+
 void() T_DeployTouch =
 {
 	entity oself;
@@ -372,22 +477,27 @@ void() T_DeployTouch =
 	if (other == self.owner)
 		return;
 	
-	obj = spawn();
-	oself = self;
-	self = obj;
-	
-	self.classname = oself.message;
-	
-	//Safe mode for if the rocket never resized or resized too recently
-	if (oself.count == 0 || (time - oself.count) < .3) {
-		setorigin(self, oself.origin + (oself.velocity * -.09));
+	if (self.message == "ticket") {
+		T_DeployPlayer();
 	} else {
-		setorigin(self, oself.origin + (oself.velocity * -.02));
+		obj = spawn();
+		oself = self;
+		self = obj;
+		
+		self.classname = oself.message;
+		self.arena_team = oself.owner.arena_team;
+		
+		//Safe mode for if the rocket never resized or was resized too recently
+		if (oself.count == 0 || (time - oself.count) < .3) {
+			setorigin(self, oself.origin + (oself.velocity * -.09));
+		} else {
+			setorigin(self, oself.origin + (oself.velocity * -.02));
+		}
+		
+		reinitialize();
+		
+		self = oself;
 	}
-	
-	reinitialize();
-	
-	self = oself;
 	
 	remove(self);
 };
@@ -413,18 +523,29 @@ void() W_Deploy =
 	missile.velocity = missile.velocity * 1000;
 	missile.angles = vectoangles(missile.velocity);
 	
-	missile.touch = T_DeployTouch;
+	//Set the contents of the missile
+	self.inventory_size --;
+	missile.message = self.inventory[self.inventory_size];
+	self.ammo_rockets = self.inventory_size;
 	
-	missile.nextthink = time + .04;
-	missile.think = T_DeployResizeCheck;
+	if (checktype(missile.message) == 0) {
+		missile.touch = T_DeployTouch;
+		
+		missile.nextthink = time + .04;
+		missile.think = T_DeployResizeCheck;
+	} else {
+		missile.touch = T_DeployPowerupTouch;
+		
+		missile.nextthink = time + .05;
+		missile.think = T_DeployParticle;
+	}
 
 	setmodel (missile, "progs/missile.mdl");
 	setsize (missile, '0 0 0', '0 0 0');
 	setorigin (missile, self.origin + v_forward*8 + '0 0 16');
 	
-	self.inventory_size --;
-	missile.message = self.inventory[self.inventory_size];
-	self.ammo_rockets = self.inventory_size;
+	
+	W_SetCurrentAmmo();
 };
 
 void() T_MissileTouch =

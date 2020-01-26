@@ -194,25 +194,28 @@ void() ShalMissileTouch =
 
 //=================================================================
 
+
+void() precache_shalrath = 
+{
+	if (time < 2) {
+		precache_model2 ("progs/shalrath.mdl");
+		precache_model2 ("progs/h_shal.mdl");
+		precache_model2 ("progs/v_spike.mdl");
+		
+		precache_sound2 ("shalrath/attack.wav");
+		precache_sound2 ("shalrath/attack2.wav");
+		precache_sound2 ("shalrath/death.wav");
+		precache_sound2 ("shalrath/idle.wav");
+		precache_sound2 ("shalrath/pain.wav");
+		precache_sound2 ("shalrath/sight.wav");
+	}
+}
+
 /*QUAKED monster_shalrath (1 0 0) (-32 -32 -24) (32 32 48) Ambush
 */
 void() monster_shalrath =
 {
-	if (deathmatch)
-	{
-		remove(self);
-		return;
-	}
-	precache_model2 ("progs/shalrath.mdl");
-	precache_model2 ("progs/h_shal.mdl");
-	precache_model2 ("progs/v_spike.mdl");
-	
-	precache_sound2 ("shalrath/attack.wav");
-	precache_sound2 ("shalrath/attack2.wav");
-	precache_sound2 ("shalrath/death.wav");
-	precache_sound2 ("shalrath/idle.wav");
-	precache_sound2 ("shalrath/pain.wav");
-	precache_sound2 ("shalrath/sight.wav");
+	precache_shalrath();
 	
 	self.solid = SOLID_SLIDEBOX;
 	self.movetype = MOVETYPE_STEP;
@@ -220,6 +223,7 @@ void() monster_shalrath =
 	setmodel (self, "progs/shalrath.mdl");
 	setsize (self, VEC_HULL2_MIN, VEC_HULL2_MAX);
 	self.health = 400;
+	self.max_health = self.health;
 
 	self.th_stand = shal_stand;
 	self.th_walk = shal_walk1;
